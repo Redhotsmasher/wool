@@ -7,7 +7,7 @@ TOP = ..
 include $(TOP)/Makefile.inc
 
 CFLAGS += -I$(TOP)/src -I$(TOP)/examples -Icheckfiles
-LDLIBS += -lwool -lcheck $(threadsflag) -lm -lrt
+LDLIBS += -lwool -lcheck $(threadsflag) -lm -lrt -lsubunit
 LDFLAGS += -L$(TOP)/src
 
 TARGETS = generated/wool-core

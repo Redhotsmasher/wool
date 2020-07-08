@@ -34,7 +34,7 @@
 #define WOOL_COMMON_H
 
 #ifndef WOOL_DEBUG
-  #define NDEBUG
+//  #define NDEBUG
 #endif
 
 #ifndef WOOL_STAT
@@ -50,8 +50,11 @@
 
 #include <pthread.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include <assert.h>
+
+#include <stdatomic.h>
 
 #define _WOOL_(V) _wool_##V
 #define _WOOL_MAX_ARITY 10
@@ -248,11 +251,11 @@
 #endif
 
 
-#if WOOL_JOIN_STACK
-#define _WOOL_pool_blocks 128
-#else
-#define _WOOL_pool_blocks 8
-#endif
+//#if WOOL_JOIN_STACK
+//#define _WOOL_pool_blocks 128
+//#else
+#define _WOOL_pool_blocks 4
+//#endif
 
 #define SMALL_BODY             2
 #define MEDIUM_BODY          100
@@ -290,6 +293,10 @@ typedef volatile unsigned long exarg_t;
   #endif
 #endif
 
+//pthread_mutex_t xchg_lock;
+void __VERIFIER_atomic_xchg32(int* r, int* m);
+void __VERIFIER_atomic_xchg64(long* r, long* m);
+
 #if defined(__sparc__)
   #define SFENCE        asm volatile( "membar #StoreStore" )
   #define MFENCE        asm volatile( "membar #StoreLoad|#StoreStore" )
@@ -305,11 +312,13 @@ typedef volatile unsigned long exarg_t;
   #define PREFETCH(a)   /*  */
   #define EXCHANGE(R,M) asm volatile ( "xchg   %1, %0" : "+m" (M), "+r" (R) )
 #elif defined(__x86_64__)
-  #define SFENCE        asm volatile( "sfence" )
-  #define MFENCE        asm volatile( "mfence" )
+  #define SFENCE        __sync_synchronize(); //asm volatile( "sfence" )
+  #define MFENCE        __sync_synchronize(); //asm volatile( "mfence" )
   /* { volatile int i=1; EXCHANGE( i, i ); } */
   #define PREFETCH(a)   /*  */
-  #define EXCHANGE(R,M) asm volatile ( "xchg   %1, %0" : "+m" (M), "+r" (R) )
+  #define EXCHANGE(R,M)  //asm volatile ( "xchg   %1, %0" : "+m" (M), "+r" (R) ) //int oldval = (M); while(__sync_bool_compare_and_swap(&(M), oldval, (R)) == false) { oldval = (M); /*printf("oldval: %x, (M) = %x, (R) = %x\n", oldval, (M), (R));*/ }; (R) = oldval; //wool_lock(&xchg_lock); int temp = (M); (M) = (R); (R) = temp; wool_unlock(&xchg_lock); //int oldval = (M); /*printf("oldval: %x, (M) = %x, (R) = %x\n", oldval, (M), (R));*/ 
+#define EXCHANGE32(R,M) __VERIFIER_atomic_xchg32((int*)&(R), (int*)&(M));//(R) = atomic_exchange_explicit(((_Atomic int*)&(M)), *((_Atomic int*)&(R)), memory_order_seq_cst);//atomic_exchange((_Atomic int*)&(M), *(_Atomic int*)&(R)/*, memory_order_relaxed*/);
+#define EXCHANGE64(R,M) __VERIFIER_atomic_xchg64((long*)&(R), (long*)&(M));//(R) = atomic_exchange_explicit(((_Atomic long*)&(M)), *((_Atomic long*)&(R)), memory_order_seq_cst);//atomic_exchange((_Atomic long*)&(M), *(_Atomic long*)&(R)/*, memory_order_relaxed*/);
   #define CAS(R,M,V)  asm volatile ( "lock cmpxchg %2, %1" \
                                      : "+a" (V), "+m"(M) : "r" (R) : "cc" )
 #elif defined(__ia64__)
@@ -348,10 +357,10 @@ typedef volatile unsigned long exarg_t;
 #define STORE_WRAPPER_REL(var,val)  STORE_PTR_REL( (var), (val) )
 #define READ_WRAPPER_ACQ(var)       READ_PTR_ACQ( (var), _wool_task_header_t )
 #if WOOL_BALARM_CACHING
-  #define STORE_BALARM_T_REL(var,val) STORE_PTR_REL( (var), (val) )
+  #define STORE_BALARM_T_REL(var,val) /*printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(var), (var), (var), (val), (val));*/ STORE_PTR_REL( (var), (val) )
   #define READ_BALARM_T_ACQ(var)      READ_PTR_ACQ( (var), balarm_t )
 #else
-  #define STORE_BALARM_T_REL(var,val) STORE_INT_REL( (var), (val) )
+  #define STORE_BALARM_T_REL(var,val) /*printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(var), (var), (var), (val), (val));*/ STORE_INT_REL( (var), (val) )
   #define READ_BALARM_T_ACQ(var)      READ_INT_ACQ( (var), balarm_t )
 #endif
 
@@ -845,7 +854,7 @@ static inline _wool_task_header_t _WOOL_(exch_busy)( volatile _wool_task_header_
      #else
        T_BUSY;
      #endif
-    EXCHANGE( s, *(a) );
+    EXCHANGE64( s, *(a) );
     return s;
   #endif
 }
@@ -856,7 +865,11 @@ static inline balarm_t _WOOL_(exch_busy_balarm)( volatile balarm_t *a )
     return (balarm_t) __insn_tns((volatile int *) a);
   #else
     balarm_t s = TF_OCC;
-    EXCHANGE( s, *(a) );
+#if WOOL_BALARM_CACHING
+    EXCHANGE64( s, *(a) );
+#else
+    EXCHANGE32( s, *(a) );
+#endif
     return s;
   #endif
 }
@@ -978,6 +991,7 @@ void _WOOL_(fast_spawn)( Worker *self, Task *cached_top, _wool_task_header_t f )
     if( cached_top < self->pr.spawn_high ) {
       /* Fast case, public and private */
       #if WOOL_DEFER_NOT_STOLEN && !SINGLE_FIELD_SYNC && !TWO_FIELD_SYNC
+        //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &cached_top->balarm, cached_top->balarm, cached_top->balarm, NOT_STOLEN, NOT_STOLEN);
         cached_top->balarm = NOT_STOLEN;
       #endif
       COMPILER_FENCE;
@@ -1007,6 +1021,7 @@ void _WOOL_(fast_spawn)( Worker *self, Task *cached_top, _wool_task_header_t f )
       }
       #endif
       #if WOOL_DEFER_NOT_STOLEN && !SINGLE_FIELD_SYNC && !TWO_FIELD_SYNC
+      //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &cached_top->balarm, cached_top->balarm, cached_top->balarm, NOT_STOLEN, NOT_STOLEN);
         cached_top->balarm = NOT_STOLEN;
       #endif
       #if TWO_FIELD_SYNC
@@ -1061,10 +1076,12 @@ grab_res_t _WOOL_(grab_in_sync)( Worker *self, Task *top )
     // fprintf( stderr, "?\n" );
 
     _WOOL_(when_sync_on_public)( self );
+    //printf("%s:%d:%s|res(%p): %x\n", __FILE__, __LINE__, __func__, &(top->balarm), res);
     #if _WOOL_ordered_stores
       if( res != TF_OCC ) {
         top->hdr = SFS_EMPTY;
         COMPILER_FENCE;
+        //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &top->balarm, top->balarm, top->balarm, TF_FREE, TF_FREE);
         top->balarm = TF_FREE;
         return TF_FREE;
       } else {
@@ -1115,7 +1132,7 @@ void _WOOL_(join_lock_lock)( volatile int *lock )
   int lock_var = 1;
   long w = 0;
   do {
-    EXCHANGE( lock_var, *lock );
+    EXCHANGE32( lock_var, *lock );
     WOOL_WAIT_CHECK(w);
   } while( lock_var == 1 );
 }

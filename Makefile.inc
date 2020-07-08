@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang
 RM = rm -f
 AR = ar
 SED = sed
@@ -10,8 +10,8 @@ endif
 threadsflag = -lpthread
 buildparams =
 
-CFLAGS = -g -O3 -Wall $(buildparams)
-MAX_ARITY = 30
+CFLAGS = -std=gnu11 -g3 -O0 -Wall $(buildparams)
+MAX_ARITY = 4
 
 ifdef TASK_PAYLOAD
   buildparams += -DTASK_PAYLOAD=$(TASK_PAYLOAD)

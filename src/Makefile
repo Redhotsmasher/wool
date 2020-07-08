@@ -7,7 +7,7 @@ TOP = ..
 include $(TOP)/Makefile.inc
 
 OBJS = wool.o
-TARGET=libwool.a
+TARGET= libwool.a
 EXTRA_OBJS=wool-main.o
 CFLAGS += -W -Wno-unused-parameter
 
@@ -21,9 +21,16 @@ $(TARGET): $(OBJS)
 
 clean :
 	$(RM) wool.h $(OBJS) $(EXTRA_OBJS) $(TARGET)
+	$(RM) *.ll
+	$(RM) wool_complete.c
 
 
 
 wool.o: wool.h wool-common.h
+	$(CC) $(CFLAGS) wool.c -c -o $@
+	$(CC) $(CFLAGS) wool.c -c -emit-llvm -o wool.ll
+	cpp $(CFLAGS) wool.c -E -C -fdirectives-only -o wool_complete.c
 wool-main.o: wool.h wool-common.h
+	$(CC) $(CFLAGS) wool-main.c -c -o $@
+	$(CC) $(CFLAGS) wool-main.c -c -emit-llvm -o wool-main.ll
 
