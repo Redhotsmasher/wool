@@ -11,7 +11,7 @@ threadsflag = -lpthread
 buildparams =
 
 CFLAGS = -std=gnu11 -g3 -O0 -Wall $(buildparams)
-MAX_ARITY = 4
+MAX_ARITY = 10
 
 ifdef TASK_PAYLOAD
   buildparams += -DTASK_PAYLOAD=$(TASK_PAYLOAD)
