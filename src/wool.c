@@ -3818,7 +3818,7 @@ int wool_init_options( int argc, char **argv )
   while( 1 ) {
     int c;
 
-    c = getopt( argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:L:R:" );
+    c = -1;//getopt( argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:L:R:" );
 
     if( c == -1 || c == '?' ) break;
 
