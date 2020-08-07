@@ -1034,6 +1034,9 @@ static inline Task *idx_to_task_p_pu( Worker *w, unsigned long t, Task *b )
   int bidx = (t / first_block_size) % _WOOL_pool_blocks;
   Task *block = w->pu.pu_block_base[bidx];
 
+  //printf("%i|w = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, w, w->pu.pu_block_base[0], w->pu.pu_block_base[1], w->pu.pu_block_base[2], w->pu.pu_block_base[3]);
+  //printf("w = %p, t = %lx, b = %p, bidx = %x, block = %p\n", w, t, b, bidx, block);
+  printf("Reading from p: %p, lx: %lx, offset: %lx\n", block, block, t % first_block_size);
   return block == NULL ? NULL : block + t % first_block_size;
 }
 
@@ -1556,6 +1559,7 @@ Task *_WOOL_(slow_spawn)( Worker *self, Task *p, _wool_task_header_t f )
         exit(1);
       }
       SFENCE;
+      //printf("%i|w = %p, newval = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, self, self->pr.block_base[new_idx], self->pu.pu_block_base[0], self->pu.pu_block_base[1], self->pu.pu_block_base[2], self->pu.pu_block_base[3]);
       self->pu.pu_block_base[new_idx] = self->pr.block_base[new_idx];
     }
     next_free = self->pr.block_base[new_idx];
@@ -2254,6 +2258,7 @@ static void init_worker( int w_idx )
   assert( n_stealable >= 0 );
   init_block( w->pr.dq_base, first_block_size, (unsigned long) n_stealable );
   w->pr.block_base[0] = w->pr.dq_base;
+  //printf("%i|w = %p, newval = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, w, w->pr.dq_base, w->pu.pu_block_base[0], w->pu.pu_block_base[1], w->pu.pu_block_base[2], w->pu.pu_block_base[3]);
   w->pu.pu_block_base[0] = w->pr.dq_base;
   for( i = 1; i < _WOOL_pool_blocks; i++ ) {
     w->pr.block_base[i] = NULL;
@@ -2479,6 +2484,9 @@ steal( Worker *self, Worker **victim_p, _wool_task_header_t card, int flags, vol
 
   tp0 = idx_to_task_p_pu( victim0, bot_idx0, base0 );
   tp1 = idx_to_task_p_pu( victim1, bot_idx1, base1 );
+
+  //printf("%i|victim0 = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, victim0, victim0->pu.pu_block_base[0], victim0->pu.pu_block_base[1], victom0->pu.pu_block_base[2], victim0->pu.pu_block_base[3]);
+  //printf("%i|victim1 = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, victim1, victim1->pu.pu_block_base[0], victim1->pu.pu_block_base[1], victom1->pu.pu_block_base[2], victim1->pu.pu_block_base[3]);
 
   if( tp0 != NULL ) {
     balarm0 = tp0->balarm;

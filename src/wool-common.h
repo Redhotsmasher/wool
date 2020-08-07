@@ -312,13 +312,13 @@ void __VERIFIER_atomic_xchg64(long* r, long* m);
   #define PREFETCH(a)   /*  */
   #define EXCHANGE(R,M) asm volatile ( "xchg   %1, %0" : "+m" (M), "+r" (R) )
 #elif defined(__x86_64__)
-  #define SFENCE        __sync_synchronize(); //asm volatile( "sfence" )
-  #define MFENCE        __sync_synchronize(); //asm volatile( "mfence" )
+  #define SFENCE      asm volatile("" ::: "memory"); __sync_synchronize(); //asm volatile( "sfence" )
+  #define MFENCE      asm volatile("" ::: "memory"); __sync_synchronize(); //asm volatile( "mfence" )
   /* { volatile int i=1; EXCHANGE( i, i ); } */
   #define PREFETCH(a)   /*  */
   #define EXCHANGE(R,M)  //asm volatile ( "xchg   %1, %0" : "+m" (M), "+r" (R) ) //int oldval = (M); while(__sync_bool_compare_and_swap(&(M), oldval, (R)) == false) { oldval = (M); /*printf("oldval: %x, (M) = %x, (R) = %x\n", oldval, (M), (R));*/ }; (R) = oldval; //wool_lock(&xchg_lock); int temp = (M); (M) = (R); (R) = temp; wool_unlock(&xchg_lock); //int oldval = (M); /*printf("oldval: %x, (M) = %x, (R) = %x\n", oldval, (M), (R));*/ 
-#define EXCHANGE32(R,M) __VERIFIER_atomic_xchg32((int*)&(R), (int*)&(M));//(R) = atomic_exchange_explicit(((_Atomic int*)&(M)), *((_Atomic int*)&(R)), memory_order_seq_cst);//atomic_exchange((_Atomic int*)&(M), *(_Atomic int*)&(R)/*, memory_order_relaxed*/);
-#define EXCHANGE64(R,M) __VERIFIER_atomic_xchg64((long*)&(R), (long*)&(M));//(R) = atomic_exchange_explicit(((_Atomic long*)&(M)), *((_Atomic long*)&(R)), memory_order_seq_cst);//atomic_exchange((_Atomic long*)&(M), *(_Atomic long*)&(R)/*, memory_order_relaxed*/);
+#define EXCHANGE32(R,M) /*__VERIFIER_atomic_xchg32((int*)&(R), (int*)&(M));//(R) = atomic_exchange_explicit(((_Atomic int*)&(M)), *((_Atomic int*)&(R)), memory_order_seq_cst);*/(R) = atomic_exchange((_Atomic int*)&(M), *(_Atomic int*)&(R)/*, memory_order_relaxed*/);
+#define EXCHANGE64(R,M) /*__VERIFIER_atomic_xchg64((long*)&(R), (long*)&(M));//(R) = atomic_exchange_explicit(((_Atomic long*)&(M)), *((_Atomic long*)&(R)), memory_order_seq_cst);*/(R) = atomic_exchange((_Atomic long*)&(M), *(_Atomic long*)&(R)/*, memory_order_relaxed*/);
   #define CAS(R,M,V)  asm volatile ( "lock cmpxchg %2, %1" \
                                      : "+a" (V), "+m"(M) : "r" (R) : "cc" )
 #elif defined(__ia64__)
@@ -1071,7 +1071,9 @@ static inline __attribute__((__always_inline__))
 grab_res_t _WOOL_(grab_in_sync)( Worker *self, Task *top )
 {
   #if TWO_FIELD_SYNC
+    printf("Writing %x to %p (was %x)\n", TF_OCC, &(top->balarm), top->balarm);
     balarm_t res = _WOOL_(exch_busy_balarm)( &(top->balarm) );
+    printf("Wrote %x to %p\n", top->balarm, &(top->balarm));
 
     // fprintf( stderr, "?\n" );
 
