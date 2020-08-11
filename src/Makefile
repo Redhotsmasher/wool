@@ -28,9 +28,9 @@ clean :
 
 wool.o: wool.h wool-common.h
 	$(CC) $(CFLAGS) wool.c -c -o $@
-	$(CC) $(CFLAGS) wool.c -c -emit-llvm -o wool.ll
+	$(CC) $(CFLAGS) wool.c -c -S -emit-llvm -o wool.ll
 	cpp $(CFLAGS) wool.c -E -C -fdirectives-only -o wool_complete.c
 wool-main.o: wool.h wool-common.h
 	$(CC) $(CFLAGS) wool-main.c -c -o $@
-	$(CC) $(CFLAGS) wool-main.c -c -emit-llvm -o wool-main.ll
+	$(CC) $(CFLAGS) wool-main.c -c -S -emit-llvm -o wool-main.ll
 
