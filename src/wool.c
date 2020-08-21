@@ -1035,7 +1035,7 @@ static inline Task *idx_to_task_p_pu( Worker *w, unsigned long t, Task *b )
   Task *block = w->pu.pu_block_base[bidx];
 
   //printf("%i|w = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, w, w->pu.pu_block_base[0], w->pu.pu_block_base[1], w->pu.pu_block_base[2], w->pu.pu_block_base[3]);
-  //printf("w = %p, t = %lx, b = %p, bidx = %x, block = %p\n", w, t, b, bidx, block);
+  printf("w = %p, t = %lx, b = %p, bidx = %x, block = %p\n", w, t, b, bidx, block);
   printf("%s:%d:%s|Reading from p: %p, lx: %lx, offset: %lx\n", __FILE__, __LINE__, __func__, block, block, t % first_block_size);
   printf("%s:%d:%s|Returning %p\n", __FILE__, __LINE__, __func__, block == NULL ? NULL : block + t % first_block_size);
   return block == NULL ? NULL : block + t % first_block_size;
@@ -3801,9 +3801,9 @@ int wool_init_options( int argc, char **argv )
   CPU_ZERO(&mask);
   CPU_SET(0, &mask);
   CPU_SET(1, &mask);
-  //CPU_SET(2, &mask);
+  CPU_SET(2, &mask);
   //n_procs = CPU_COUNT( &mask );
-  n_procs = 2;
+  n_procs = 3;
   //printf("mask: %lx\n", mask);
   //perror("CPU_COUNT");
   //printf("Default n_procs is: %d\n", n_procs);
@@ -3816,6 +3816,7 @@ int wool_init_options( int argc, char **argv )
   }*/
   affinity_table[0] = 1;
   affinity_table[1] = 2;
+  affinity_table[2] = 3;
 #endif
   a_ctr = 0; // In case there are command line options for affinity
 
