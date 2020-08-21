@@ -3801,9 +3801,9 @@ int wool_init_options( int argc, char **argv )
   CPU_ZERO(&mask);
   CPU_SET(0, &mask);
   CPU_SET(1, &mask);
-  CPU_SET(2, &mask);
+  //CPU_SET(2, &mask);
   //n_procs = CPU_COUNT( &mask );
-  n_procs = 3;
+  n_procs = 2;
   //printf("mask: %lx\n", mask);
   //perror("CPU_COUNT");
   //printf("Default n_procs is: %d\n", n_procs);
@@ -3816,7 +3816,7 @@ int wool_init_options( int argc, char **argv )
   }*/
   affinity_table[0] = 1;
   affinity_table[1] = 2;
-  affinity_table[2] = 3;
+  //affinity_table[2] = 3;
 #endif
   a_ctr = 0; // In case there are command line options for affinity
 
