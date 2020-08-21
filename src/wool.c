@@ -1036,7 +1036,8 @@ static inline Task *idx_to_task_p_pu( Worker *w, unsigned long t, Task *b )
 
   //printf("%i|w = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, w, w->pu.pu_block_base[0], w->pu.pu_block_base[1], w->pu.pu_block_base[2], w->pu.pu_block_base[3]);
   //printf("w = %p, t = %lx, b = %p, bidx = %x, block = %p\n", w, t, b, bidx, block);
-  printf("Reading from p: %p, lx: %lx, offset: %lx\n", block, block, t % first_block_size);
+  printf("%s:%d:%s|Reading from p: %p, lx: %lx, offset: %lx\n", __FILE__, __LINE__, __func__, block, block, t % first_block_size);
+  printf("%s:%d:%s|Returning %p\n", __FILE__, __LINE__, __func__, block == NULL ? NULL : block + t % first_block_size);
   return block == NULL ? NULL : block + t % first_block_size;
 }
 
@@ -2918,6 +2919,7 @@ static int poll( Worker *w )
   #endif
 
   p = idx_to_task_p_pu( w, bot, base );
+  printf("%s:%d:%s|Read p as %p, &(p->balarm) = %p, &(p->hdr) = %p\n", __FILE__, __LINE__, __func__, p, &(p->balarm), &(p->hdr));
   if( p != NULL && task_appears_stealable( p ) ) {
     return depth + bot;
   } else {

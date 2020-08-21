@@ -317,8 +317,8 @@ void __VERIFIER_atomic_xchg64(long* r, long* m);
   /* { volatile int i=1; EXCHANGE( i, i ); } */
   #define PREFETCH(a)   /*  */
   #define EXCHANGE(R,M)  //asm volatile ( "xchg   %1, %0" : "+m" (M), "+r" (R) ) //int oldval = (M); while(__sync_bool_compare_and_swap(&(M), oldval, (R)) == false) { oldval = (M); /*printf("oldval: %x, (M) = %x, (R) = %x\n", oldval, (M), (R));*/ }; (R) = oldval; //wool_lock(&xchg_lock); int temp = (M); (M) = (R); (R) = temp; wool_unlock(&xchg_lock); //int oldval = (M); /*printf("oldval: %x, (M) = %x, (R) = %x\n", oldval, (M), (R));*/ 
-#define EXCHANGE32(R,M) /*__VERIFIER_atomic_xchg32((int*)&(R), (int*)&(M));//(R) = atomic_exchange_explicit(((_Atomic int*)&(M)), *((_Atomic int*)&(R)), memory_order_seq_cst);*/(R) = atomic_exchange((_Atomic int*)&(M), *(_Atomic int*)&(R)/*, memory_order_relaxed*/);
-#define EXCHANGE64(R,M) /*__VERIFIER_atomic_xchg64((long*)&(R), (long*)&(M));//(R) = atomic_exchange_explicit(((_Atomic long*)&(M)), *((_Atomic long*)&(R)), memory_order_seq_cst);*/(R) = atomic_exchange((_Atomic long*)&(M), *(_Atomic long*)&(R)/*, memory_order_relaxed*/);
+#define EXCHANGE32(R,M) __VERIFIER_atomic_xchg32((int*)&(R), (int*)&(M));//(R) = atomic_exchange_explicit(((_Atomic int*)&(M)), *((_Atomic int*)&(R)), memory_order_seq_cst);*///(R) = atomic_exchange((_Atomic int*)&(M), *(_Atomic int*)&(R)/*, memory_order_relaxed*/);
+#define EXCHANGE64(R,M) __VERIFIER_atomic_xchg64((long*)&(R), (long*)&(M));//(R) = atomic_exchange_explicit(((_Atomic long*)&(M)), *((_Atomic long*)&(R)), memory_order_seq_cst);*///(R) = atomic_exchange((_Atomic long*)&(M), *(_Atomic long*)&(R)/*, memory_order_relaxed*/);
   #define CAS(R,M,V)  asm volatile ( "lock cmpxchg %2, %1" \
                                      : "+a" (V), "+m"(M) : "r" (R) : "cc" )
 #elif defined(__ia64__)
@@ -1071,19 +1071,19 @@ static inline __attribute__((__always_inline__))
 grab_res_t _WOOL_(grab_in_sync)( Worker *self, Task *top )
 {
   #if TWO_FIELD_SYNC
-    printf("Writing %x to %p (was %x)\n", TF_OCC, &(top->balarm), top->balarm);
+    printf("%s:%d:%s|Writing %x to %p (was %x)\n", __FILE__, __LINE__, __func__, TF_OCC, &(top->balarm), top->balarm);
     balarm_t res = _WOOL_(exch_busy_balarm)( &(top->balarm) );
-    printf("Wrote %x to %p\n", top->balarm, &(top->balarm));
+    printf("%s:%d:%s|Wrote %x to %p\n", __FILE__, __LINE__, __func__, top->balarm, &(top->balarm));
 
     // fprintf( stderr, "?\n" );
 
     _WOOL_(when_sync_on_public)( self );
-    //printf("%s:%d:%s|res(%p): %x\n", __FILE__, __LINE__, __func__, &(top->balarm), res);
+    printf("%s:%d:%s|res(%p): %x\n", __FILE__, __LINE__, __func__, &(top->balarm), res);
     #if _WOOL_ordered_stores
       if( res != TF_OCC ) {
         top->hdr = SFS_EMPTY;
         COMPILER_FENCE;
-        //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &top->balarm, top->balarm, top->balarm, TF_FREE, TF_FREE);
+        printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &top->balarm, top->balarm, top->balarm, TF_FREE, TF_FREE);
         top->balarm = TF_FREE;
         return TF_FREE;
       } else {
