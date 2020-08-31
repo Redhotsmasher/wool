@@ -991,7 +991,7 @@ void _WOOL_(fast_spawn)( Worker *self, Task *cached_top, _wool_task_header_t f )
     if( cached_top < self->pr.spawn_high ) {
       /* Fast case, public and private */
       #if WOOL_DEFER_NOT_STOLEN && !SINGLE_FIELD_SYNC && !TWO_FIELD_SYNC
-        //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &cached_top->balarm, cached_top->balarm, cached_top->balarm, NOT_STOLEN, NOT_STOLEN);
+        printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &cached_top->balarm, cached_top->balarm, cached_top->balarm, NOT_STOLEN, NOT_STOLEN);
         cached_top->balarm = NOT_STOLEN;
       #endif
       COMPILER_FENCE;
@@ -1021,7 +1021,7 @@ void _WOOL_(fast_spawn)( Worker *self, Task *cached_top, _wool_task_header_t f )
       }
       #endif
       #if WOOL_DEFER_NOT_STOLEN && !SINGLE_FIELD_SYNC && !TWO_FIELD_SYNC
-      //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &cached_top->balarm, cached_top->balarm, cached_top->balarm, NOT_STOLEN, NOT_STOLEN);
+      printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &cached_top->balarm, cached_top->balarm, cached_top->balarm, NOT_STOLEN, NOT_STOLEN);
         cached_top->balarm = NOT_STOLEN;
       #endif
       #if TWO_FIELD_SYNC
