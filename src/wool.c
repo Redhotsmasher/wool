@@ -3973,19 +3973,13 @@ int wool_init( int argc, char **argv )
 }
 
 void __VERIFIER_atomic_xchg32(int* r, int* m) {
-    //printf("%s:%d:%s|Exchanging %p and %p: ", __FILE__, __LINE__, __func__, r, m);
-    //printf("%i (%x) <=> %i (%x) | ", *r, *r, *m, *m);
     int temp = *m;
     *m = *r;
     *r = temp;
-    //printf("%i (%x) <=> %i (%x)\n", *r, *r, *m, *m);
 }
 
 void __VERIFIER_atomic_xchg64(long* r, long* m) {
-    //printf("%s:%d:%s|Exchanging %p and %p: ", __FILE__, __LINE__, __func__, r, m);
-    //printf("%li (%lx) <=> %li (%lx) | ", *r, *r, *m, *m);
     long temp = *m;
     *m = *r;
     *r = temp;
-    //printf("%li (%lx) <=> %li (%lx)\n", *r, *r, *m, *m);
 }
