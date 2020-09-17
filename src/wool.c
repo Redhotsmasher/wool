@@ -2263,6 +2263,7 @@ static void init_worker( int w_idx )
   w->pu.pu_block_base[0] = w->pr.dq_base;
   for( i = 1; i < _WOOL_pool_blocks; i++ ) {
     w->pr.block_base[i] = NULL;
+    w->pu.pu_block_base[i] = NULL;
   }
   w->pr.t_idx = 0;
 
