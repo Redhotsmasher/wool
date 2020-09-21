@@ -313,7 +313,7 @@ void __VERIFIER_atomic_xchg64(long* r, long* m);
   #define EXCHANGE(R,M) asm volatile ( "xchg   %1, %0" : "+m" (M), "+r" (R) )
 #elif defined(__x86_64__)
   #define SFENCE      __sync_synchronize(); //asm volatile("" ::: "memory"); //asm volatile( "sfence" )
-  #define MFENCE      __sync_synchronize(); //asm volatile("" ::: "memory");  //asm volatile( "mfence" )
+  #define MFENCE      __sync_synchronize(); //asm volatile("" ::: "memory"); //asm volatile( "mfence" )
   /* { volatile int i=1; EXCHANGE( i, i ); } */
   #define PREFETCH(a)   /*  */
   #define EXCHANGE(R,M)  //asm volatile ( "xchg   %1, %0" : "+m" (M), "+r" (R) ) //int oldval = (M); while(__sync_bool_compare_and_swap(&(M), oldval, (R)) == false) { oldval = (M); /*printf("oldval: %x, (M) = %x, (R) = %x\n", oldval, (M), (R));*/ }; (R) = oldval; //wool_lock(&xchg_lock); int temp = (M); (M) = (R); (R) = temp; wool_unlock(&xchg_lock); //int oldval = (M); /*printf("oldval: %x, (M) = %x, (R) = %x\n", oldval, (M), (R));*/ 
