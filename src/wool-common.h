@@ -50,11 +50,8 @@
 
 #include <pthread.h>
 #include <stdio.h>
-#include <stdbool.h>
 
 #include <assert.h>
-
-#include <stdatomic.h>
 
 #define _WOOL_(V) _wool_##V
 #define _WOOL_MAX_ARITY 10
