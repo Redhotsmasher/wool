@@ -1431,10 +1431,8 @@ static Task* evacuate_oldest_block( Worker *self, unsigned long new_base_idx )
 
   for( i = 0; i < first_block_size; i++ ) {
     _WOOL_(StolenTask) *curr = (_WOOL_(StolenTask) *) (block+i);
-    w = 0;
     while( SFS_IS_TASK(curr->hdr) ) WOOL_WAIT_CHECK(w) ;
     //printf("WOOL_WAIT_CHECK on SFS_IS_TASK(curr->hdr): %l\n", w);
-    w = 0;
     while( curr->join_data.back_link == NULL ) WOOL_WAIT_CHECK(w) ;
     //printf("WOOL_WAIT_CHECK on curr->join_data.back_link == NULL: %l\n", w);
     _WOOL_(join_lock_lock)( &(curr->join_lock) );
