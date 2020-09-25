@@ -3729,26 +3729,21 @@ static void rts_init_start( int start_ws )
   }
   #endif
   
-  //pthread_attr_init( &worker_attr );
-  //pthread_attr_setscope( &worker_attr, PTHREAD_SCOPE_SYSTEM );
-  //pthread_attr_setstacksize( &worker_attr, worker_stack_size );
+  pthread_attr_init( &worker_attr );
+  pthread_attr_setscope( &worker_attr, PTHREAD_SCOPE_SYSTEM );
+  pthread_attr_setstacksize( &worker_attr, worker_stack_size );
   
   tls_self = _WOOL_(key_create)();
 
   milestone_bcw = us_elapsed();
 
-  int j = 0;
-
   // We only start thread leaders here; the helpers are either fibres or started later
   for( i=1; i < n_procs; i++ ) {
     pthread_create( ts+i*(n_threads/n_procs)-1,
-                    /*&worker_attr,*/ NULL,
+                    &worker_attr,
                     &do_work,
                     workers+i*workers_per_thread );
-    j++;
   }
-
-  //printf("[%d]Created %d threads.\n", __LINE__, j);
 
   milestone_acw = us_elapsed();
 
