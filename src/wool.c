@@ -2842,8 +2842,7 @@ static int steal_one( Worker *self, Worker * victim, _wool_task_header_t card, i
 static int myrand( unsigned int *seedp, int max )
 {
     //return rand_r( seedp ) % max;;
-    //return __VERIFIER_nondet_int() % max;
-    return 0;
+    return __VERIFIER_nondet_int() % max;
 }
 
 static int rand_interval = 40; // By default, scan sequentially for 0..39 attempts

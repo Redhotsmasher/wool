@@ -6,6 +6,8 @@
 TOP = .
 include $(TOP)/Makefile.inc
 
+.DEFAULT_GOAL := src
+
 SUBDIRS=src examples test
 CLEANDIRS=$(SUBDIRS:%=clean-%)
 
