@@ -2371,7 +2371,7 @@ static void init_workers( int w_idx, int n )
   //int j = 0;
   for( i = w_idx+1; i < w_idx+n; i++ ) {
    #if THREAD_GARAGE
-      pthread_create( ts+i-1, /*&worker_attr,*/ NULL, (void *(*)(void *)) look_for_work, workers[i] );
+      pthread_create( ts+i-1, &worker_attr, (void *(*)(void *)) look_for_work, workers[i] );
     _WOOL_(setspecific)( &tls_self, workers[i] );
     //j++;
    #endif
