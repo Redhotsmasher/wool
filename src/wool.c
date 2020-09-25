@@ -298,7 +298,7 @@ static long long unsigned us_elapsed(void)
   struct timeval now;
   long long unsigned t;
 
-  //gettimeofday( &now, NULL );
+  gettimeofday( &now, NULL );
 
   t = now.tv_sec * 1000000LL + now.tv_usec;
 
