@@ -3792,7 +3792,6 @@ int wool_init_options( int argc, char **argv )
   // affinity of the root worker.
   affinity_mode = 3;
   sched_getaffinity( 0, sizeof(cpu_set_t), &mask );
-  CPU_ZERO(&mask);
   n_procs = CPU_COUNT( &mask );
   while( a_ctr < n_procs ) {
     if( CPU_ISSET( i, &mask ) ) {
@@ -3808,7 +3807,7 @@ int wool_init_options( int argc, char **argv )
   opterr = 0;
 
   if( argc == 0 ) return 0; // Sometimes we start Wool without giving it any command line options, but we still want the affinity set.
-
+  
   // An old Solaris box I love does not support long options...
   while( 1 ) {
     int c;
