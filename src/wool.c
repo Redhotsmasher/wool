@@ -100,8 +100,7 @@
 #endif
 
 #ifndef WOOL_INIT_SPIN
-//#define WOOL_INIT_SPIN 1
-  #define WOOL_INIT_SPIN 0
+  #define WOOL_INIT_SPIN 1
 #endif
 
 #ifndef WOOL_DEFER_BOT_DEC_OPT
@@ -3725,11 +3724,11 @@ static void rts_init_start( int start_ws )
     }
   }
   #endif
-  
+
   pthread_attr_init( &worker_attr );
   pthread_attr_setscope( &worker_attr, PTHREAD_SCOPE_SYSTEM );
   pthread_attr_setstacksize( &worker_attr, worker_stack_size );
-  
+
   tls_self = _WOOL_(key_create)();
 
   milestone_bcw = us_elapsed();
@@ -3807,7 +3806,7 @@ int wool_init_options( int argc, char **argv )
   opterr = 0;
 
   if( argc == 0 ) return 0; // Sometimes we start Wool without giving it any command line options, but we still want the affinity set.
-  
+
   // An old Solaris box I love does not support long options...
   while( 1 ) {
     int c;
