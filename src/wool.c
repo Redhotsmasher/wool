@@ -2256,7 +2256,6 @@ static void init_worker( int w_idx )
   assert( n_stealable >= 0 );
   init_block( w->pr.dq_base, first_block_size, (unsigned long) n_stealable );
   w->pr.block_base[0] = w->pr.dq_base;
-  //printf("%i|w = %p, newval = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, w, w->pr.dq_base, w->pu.pu_block_base[0], w->pu.pu_block_base[1], w->pu.pu_block_base[2], w->pu.pu_block_base[3]);
   w->pu.pu_block_base[0] = w->pr.dq_base;
   for( i = 1; i < _WOOL_pool_blocks; i++ ) {
     w->pr.block_base[i] = NULL;
