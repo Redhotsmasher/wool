@@ -7,7 +7,7 @@ TOP = ..
 include $(TOP)/Makefile.inc
 
 OBJS = wool.o
-TARGET= libwool.a
+TARGET=libwool.a
 EXTRA_OBJS=wool-main.o
 CFLAGS += -W -Wno-unused-parameter
 

@@ -297,7 +297,7 @@ static long long unsigned us_elapsed(void)
   struct timeval now;
   long long unsigned t;
 
-  gettimeofday( &now, NULL );
+  //gettimeofday( &now, NULL );
 
   t = now.tv_sec * 1000000LL + now.tv_usec;
 
@@ -3416,7 +3416,7 @@ static void signal_worker_shutdown( void )
   WOOL_WHEN_SYNC_MORE( wool_lock( &more_lock ); )
   for( i = 0; i < n_workers; i++) {
     // Quit look_for_work().
-    workers[i]->pr.more_work = 1;
+    //workers[i]->pr.more_work = 1;
     // This releases work_lock, set more_work under work_lock.
     wool_lock( &( workers[i]->pu.work_lock ) );
     workers[i]->pr.more_work = 0;
