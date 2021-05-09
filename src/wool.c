@@ -3416,7 +3416,7 @@ static void signal_worker_shutdown( void )
   WOOL_WHEN_SYNC_MORE( wool_lock( &more_lock ); )
   for( i = 0; i < n_workers; i++) {
     // Quit look_for_work().
-    //workers[i]->pr.more_work = 1;
+    workers[i]->pr.more_work = 1;
     // This releases work_lock, set more_work under work_lock.
     wool_lock( &( workers[i]->pu.work_lock ) );
     workers[i]->pr.more_work = 0;
@@ -3789,15 +3789,20 @@ int wool_init_options( int argc, char **argv )
   // Default number of processes and worker affinities are given by looking at the
   // affinity of the root worker.
   affinity_mode = 3;
-  sched_getaffinity( 0, sizeof(cpu_set_t), &mask );
+  //sched_getaffinity( 0, sizeof(cpu_set_t), &mask );
   n_procs = CPU_COUNT( &mask );
-  while( a_ctr < n_procs ) {
+  /*while( a_ctr < n_procs ) {
     if( CPU_ISSET( i, &mask ) ) {
       affinity_table[a_ctr] = i+1;  // There are no zeros in the affinity_table
+      printf("affinity_table[%i] = %i.\n", a_ctr, affinity_table[a_ctr]);
       a_ctr++;
     }
     i++;
-  }
+  }*/
+  affinity_table[0] = 1;
+  affinity_table[1] = 2;
+  affinity_table[2] = 3;
+  affinity_table[3] = 4;
 #endif
   a_ctr = 0; // In case there are command line options for affinity
 
@@ -3810,8 +3815,10 @@ int wool_init_options( int argc, char **argv )
   while( 1 ) {
     int c;
 
-    c = getopt( argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:L:R:" );
-
+    //c = getopt( argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:L:R:" );
+    n_procs = 2;
+    c = -1;
+    
     if( c == -1 || c == '?' ) break;
 
     switch( c ) {
@@ -3919,13 +3926,13 @@ int wool_init_options( int argc, char **argv )
     }
   }
 
-  for( i = 1; i < argc-optind+1; i++ ) {
+  /*for( i = 1; i < argc-optind+1; i++ ) {
     argv[i] = argv[ i+optind-1 ];
   }
   argc = argc-optind+1;
-  optind = 1;
+  optind = 1;*/
 
-  return argc;
+  return argc-1;
 
 }
 
