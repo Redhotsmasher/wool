@@ -3724,9 +3724,9 @@ static void rts_init_start( int start_ws )
   }
   #endif
 
-  pthread_attr_init( &worker_attr );
-  pthread_attr_setscope( &worker_attr, PTHREAD_SCOPE_SYSTEM );
-  pthread_attr_setstacksize( &worker_attr, worker_stack_size );
+  //pthread_attr_init( &worker_attr );
+  //pthread_attr_setscope( &worker_attr, PTHREAD_SCOPE_SYSTEM );
+  //pthread_attr_setstacksize( &worker_attr, worker_stack_size );
 
   tls_self = _WOOL_(key_create)();
 
@@ -3735,7 +3735,7 @@ static void rts_init_start( int start_ws )
   // We only start thread leaders here; the helpers are either fibres or started later
   for( i=1; i < n_procs; i++ ) {
     pthread_create( ts+i*(n_threads/n_procs)-1,
-                    &worker_attr,
+                    NULL,//&worker_attr,
                     &do_work,
                     workers+i*workers_per_thread );
   }
@@ -3790,7 +3790,7 @@ int wool_init_options( int argc, char **argv )
   // affinity of the root worker.
   affinity_mode = 3;
   //sched_getaffinity( 0, sizeof(cpu_set_t), &mask );
-  n_procs = CPU_COUNT( &mask );
+  n_procs = 2;//CPU_COUNT( &mask );
   /*while( a_ctr < n_procs ) {
     if( CPU_ISSET( i, &mask ) ) {
       affinity_table[a_ctr] = i+1;  // There are no zeros in the affinity_table
@@ -3812,11 +3812,10 @@ int wool_init_options( int argc, char **argv )
   if( argc == 0 ) return 0; // Sometimes we start Wool without giving it any command line options, but we still want the affinity set.
 
   // An old Solaris box I love does not support long options...
-  while( 1 ) {
+  while( 0 ) {
     int c;
 
     //c = getopt( argc, argv, "a:b:c:d:e:f:g:h:i:j:k:l:m:n:o:p:q:r:s:t:u:v:w:x:y:z:L:R:" );
-    n_procs = 2;
     c = -1;
     
     if( c == -1 || c == '?' ) break;
