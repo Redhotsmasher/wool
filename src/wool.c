@@ -172,9 +172,9 @@ static void *look_for_work( void *arg );
 
 WOOL_WHEN_MSPAN( hrtime_t __wool_sc = 1000; )
 
-/*static*/ Worker **workers;
-/*static*/ Task   **bases;
-/*static*/ int n_workers = 0, n_procs = 0, n_threads = 0;
+static Worker **workers;
+static Task   **bases;
+static int n_workers = 0, n_procs = 0, n_threads = 0;
 static int backoff_mode = 960; __attribute__((unused)) // No of iterations of waiting after
 static int n_stealable = -1;
 #if defined(__TILECC__)
@@ -237,7 +237,7 @@ static void *alloc_aligned( size_t nbytes, alloc_t  where )
   #endif
 }
 
-/*static*/ void make_common_data( int n )
+static void make_common_data( int n )
 {
   void *block;
 
@@ -1033,10 +1033,6 @@ static inline Task *idx_to_task_p_pu( Worker *w, unsigned long t, Task *b )
   int bidx = (t / first_block_size) % _WOOL_pool_blocks;
   Task *block = w->pu.pu_block_base[bidx];
 
-  //printf("%i|w = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, w, w->pu.pu_block_base[0], w->pu.pu_block_base[1], w->pu.pu_block_base[2], w->pu.pu_block_base[3]);
-  //printf("w = %p, t = %lx, b = %p, bidx = %x, block = %p\n", w, t, b, bidx, block);
-  //printf("%s:%d:%s|Reading from p: %p, lx: %lx, offset: %lx\n", __FILE__, __LINE__, __func__, block, block, t % first_block_size);
-  //printf("%s:%d:%s|Returning %p\n", __FILE__, __LINE__, __func__, block == NULL ? NULL : block + t % first_block_size);
   return block == NULL ? NULL : block + t % first_block_size;
 }
 
@@ -1183,7 +1179,6 @@ static void more_stealable( Worker *w, unsigned long p_idx )
     // When stores are not ordered, invalid public tasks have balarm==TF_OCC,
     // hence need not be written in that case
     if( _WOOL_ordered_stores || i <= p_idx ) {
-        //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(t->balarm), t->balarm, t->balarm, TF_FREE, TF_FREE);
       t->balarm = TF_FREE;
     }
     if( LOG_EVENTS && i <= p_idx ) {
@@ -1291,15 +1286,12 @@ static void init_block( Task *base, unsigned long size, unsigned long public_tas
   // public_tasks are those in the present block and higher, hence nonegative
 
   for( i=0; i < size; i++ ) {
-      //for( i=0; i < 4; i++ ) {
     #if TWO_FIELD_SYNC
       base[i].hdr = SFS_EMPTY;
-      //printf("%s:%d:%s|Writing to base[%i] (%p): %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, i, &(base[i].balarm), base[i].balarm, base[i].balarm, _WOOL_ordered_stores && i < public_tasks ? TF_FREE : TF_OCC, _WOOL_ordered_stores && i < public_tasks ? TF_FREE : TF_OCC);
       base[i].balarm = _WOOL_ordered_stores && i < public_tasks ? TF_FREE : TF_OCC;
       base[i].ssn = 0;
     #else
       base[i].f = T_BUSY;
-      //printf("%s:%d:%s|Writing to base[%i] %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, i, &(base[i].balarm), base[i].balarm, base[i].balarm, NOT_STOLEN, NOT_STOLEN);
       base[i].balarm = NOT_STOLEN;
     #endif
     #if WOOL_JOIN_STACK
@@ -1431,9 +1423,7 @@ static Task* evacuate_oldest_block( Worker *self, unsigned long new_base_idx )
   for( i = 0; i < first_block_size; i++ ) {
     _WOOL_(StolenTask) *curr = (_WOOL_(StolenTask) *) (block+i);
     while( SFS_IS_TASK(curr->hdr) ) WOOL_WAIT_CHECK(w) ;
-    //printf("WOOL_WAIT_CHECK on SFS_IS_TASK(curr->hdr): %l\n", w);
     while( curr->join_data.back_link == NULL ) WOOL_WAIT_CHECK(w) ;
-    //printf("WOOL_WAIT_CHECK on curr->join_data.back_link == NULL: %l\n", w);
     _WOOL_(join_lock_lock)( &(curr->join_lock) );
     if( curr->join_data.back_link == &_WOOL_(dummy_task_ptr) ) {
       // Thief got here first; wait for it to write DONE and then copy
@@ -1459,7 +1449,6 @@ static Task* evacuate_oldest_block( Worker *self, unsigned long new_base_idx )
       assert( curr->hdr != SFS_DONE );
     }
     _WOOL_(join_lock_unlock)( &(curr->join_lock) );
-    //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(curr->balarm), curr->balarm, curr->balarm, _WOOL_ordered_stores && i < public_tasks ? TF_FREE : TF_OCC, _WOOL_ordered_stores && i < public_tasks ? TF_FREE : TF_OCC);
     curr->balarm = _WOOL_ordered_stores && i < public_tasks ? TF_FREE : TF_OCC;
   }
   self->pr.join_stack_top_idx = join_top_idx + first_block_size;
@@ -1557,7 +1546,6 @@ Task *_WOOL_(slow_spawn)( Worker *self, Task *p, _wool_task_header_t f )
         exit(1);
       }
       SFENCE;
-      //printf("%i|w = %p, newval = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, self, self->pr.block_base[new_idx], self->pu.pu_block_base[0], self->pu.pu_block_base[1], self->pu.pu_block_base[2], self->pu.pu_block_base[3]);
       self->pu.pu_block_base[new_idx] = self->pr.block_base[new_idx];
     }
     next_free = self->pr.block_base[new_idx];
@@ -1571,12 +1559,10 @@ Task *_WOOL_(slow_spawn)( Worker *self, Task *p, _wool_task_header_t f )
 
 }
 
-/*static*/ Task *push_task( Worker *self, Task *p )
+static Task *push_task( Worker *self, Task *p )
 {
   int idx = self->pr.t_idx;
 
-  //printf("[%x/%x]: push_task\n", self->pr.idx, self->pr.t_idx);
-  //printf("[%x/%x]: p = %p, self->pr.pr_top = %p\n", self->pr.idx, self->pr.t_idx, p, self->pr.pr_top);
   if( p == self->pr.pr_top ) {
     if( p < self->pr.block_base[idx]+block_size(idx)-1 ) {
       self->pr.pr_top = p+1;
@@ -1609,13 +1595,12 @@ Task *_WOOL_(slow_spawn)( Worker *self, Task *p, _wool_task_header_t f )
   return self->pr.pr_top;
 }
 
-/*static*/ void pop_task( Worker *self, Task *p )
+static void pop_task( Worker *self, Task *p )
 {
   Task *base = self->pr.curr_block_base;
 
   assert( base != NULL );
 
-  //printf("[%x]: pop_task", self->pr.idx);
 #if WOOL_JOIN_STACK
   if( self->pr.block_base[ block_of_idx( self, self->pr.pool_base_idx ) ] == self->pr.pr_top ) {
     // We did not push to the join stack, so we do not pop now
@@ -2034,7 +2019,6 @@ void _WOOL_(rts_sync)( Worker *self, volatile Task *t, grab_res_t r )
     }
 
 #if !WOOL_DEFER_NOT_STOLEN && !SINGLE_FIELD_SYNC
-    //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(t->balarm), t->balarm, t->balarm, NOT_STOLEN, NOT_STOLEN);
     t->balarm = NOT_STOLEN;
 #endif
 
@@ -2366,16 +2350,12 @@ static void init_workers( int w_idx, int n )
   }
   _WOOL_(setspecific)( &tls_self, workers[w_idx] );
 
-  //int j = 0;
   for( i = w_idx+1; i < w_idx+n; i++ ) {
    #if THREAD_GARAGE
     pthread_create( ts+i-1, &worker_attr, (void *(*)(void *)) look_for_work, workers[i] );
     _WOOL_(setspecific)( &tls_self, workers[i] );
-    //j++;
    #endif
   }
-
-  //printf("[%d]Created %d threads.\n", __LINE__, j);
   
 }
 
@@ -2409,7 +2389,7 @@ static const int parsamp_size = WOOL_STEAL_PARSAMP ? 1 : 0;
   #define FAST_TIME(t) /* Empty */
 #endif
 
-/*static*/ int
+static int
 steal( Worker *self, Worker **victim_p, _wool_task_header_t card, int flags, volatile Task *jt, unsigned long ssn )
 {
   volatile Task   *tp;
@@ -2482,9 +2462,6 @@ steal( Worker *self, Worker **victim_p, _wool_task_header_t card, int flags, vol
 
   tp0 = idx_to_task_p_pu( victim0, bot_idx0, base0 );
   tp1 = idx_to_task_p_pu( victim1, bot_idx1, base1 );
-
-  //printf("%i|victim0 = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, victim0, victim0->pu.pu_block_base[0], victim0->pu.pu_block_base[1], victom0->pu.pu_block_base[2], victim0->pu.pu_block_base[3]);
-  //printf("%i|victim1 = %p, pu_block_base[0] = %p, pu_block_base[1] = %p, pu_block_base[2] = %p, pu_block_base[3] = %p\n", __LINE__, victim1, victim1->pu.pu_block_base[0], victim1->pu.pu_block_base[1], victom1->pu.pu_block_base[2], victim1->pu.pu_block_base[3]);
 
   if( tp0 != NULL ) {
     balarm0 = tp0->balarm;
@@ -2635,7 +2612,6 @@ steal( Worker *self, Worker **victim_p, _wool_task_header_t card, int flags, vol
                         && tp->hdr > (_wool_task_header_t) T_LAST  ) ) {
 #if THE_SYNC
       // THE version, uses locks between thieves (ie !WOOL_STEAL_NOLOCK)
-      //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(tp->balarm), tp->balarm, tp->balarm, self_idx, self_idx);
       tp->balarm = self_idx;
       MFENCE;
       f = tp->hdr;
@@ -2643,7 +2619,6 @@ steal( Worker *self, Worker **victim_p, _wool_task_header_t card, int flags, vol
       if( f > T_LAST ) {  // Check again after the fence!
         victim->pu.dq_bot = bot_idx+1;
       } else {
-          //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(tp->balarm), tp->balarm, tp->balarm, NOT_STOLEN, NOT_STOLEN);
         tp->balarm = NOT_STOLEN;
         tp = NULL;
       }
@@ -2682,7 +2657,6 @@ steal( Worker *self, Worker **victim_p, _wool_task_header_t card, int flags, vol
           #endif
           FAST_TIME(t_post_c);
         } else {
-            //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(tp->balarm), tp->balarm, tp->balarm, WOOL_BALARM_CACHING ? alarm : TF_FREE, WOOL_BALARM_CACHING ? alarm : TF_FREE);
           tp->balarm = WOOL_BALARM_CACHING ? alarm : TF_FREE;
           tp = NULL;
           PR_INC( self, CTR_steal_no_inc ); // does the job of counting back outs
@@ -2708,7 +2682,6 @@ steal( Worker *self, Worker **victim_p, _wool_task_header_t card, int flags, vol
 
           _wool_unbundled_mf(); // If the exchange does not have mf semantics, we do an mf
 
-          //printf("%s:%d:%s|Writing to %p: %i (%x) -> %i (%x)\n", __FILE__, __LINE__, __func__, &(tp->balarm), tp->balarm, tp->balarm, self_idx, self_idx);
           tp->balarm = self_idx;
 
 #if !WOOL_FIXED_STEAL
@@ -2914,9 +2887,7 @@ static int poll( Worker *w )
     #endif
   #endif
 
-  //printf("%s:%d:%s|base = %p\n", __FILE__, __LINE__, __func__, base);
   p = idx_to_task_p_pu( w, bot, base );
-  //printf("%s:%d:%s|Read p as %p, &(p->balarm) = %p, &(p->hdr) = %p\n", __FILE__, __LINE__, __func__, p, &(p->balarm), &(p->hdr));
   if( p != NULL && task_appears_stealable( p ) ) {
     return depth + bot;
   } else {
@@ -3212,20 +3183,16 @@ static void *do_work( void *arg )
     (*self_p)->pr.time = gethrtime();
   #endif
 
-  //printf("[%i]: do_work\n", self_idx);
   wool_lock( &( (*self_p)->pu.work_lock )  );
-  //printf("[%i]: work_lock\n", self_idx);
   if( (*self_p)->pu.fun == NULL && (*self_p)->pr.more_work > 0 ) {
     pthread_cond_wait( &( (*self_p)->pu.work_available ), &( (*self_p)->pu.work_lock ) );
   }
 
-  //printf("[%i]: work\n", self_idx);
   while( (*self_p)->pr.more_work > 0 ) {
     (*self_p)->pu.fun( (*self_p)->pu.fun_arg );
     (*self_p)->pu.fun = NULL;
     pthread_cond_wait( &( (*self_p)->pu.work_available ), &( (*self_p)->pu.work_lock ) );
   }
-  //printf("[%i]: work_unlock\n", self_idx);
   wool_unlock( &( (*self_p)->pu.work_lock ) );
 
   time_event( workers[self_idx], 9 );
