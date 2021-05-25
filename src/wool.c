@@ -3760,7 +3760,6 @@ int wool_init_options( int argc, char **argv )
   /*while( a_ctr < n_procs ) {
     if( CPU_ISSET( i, &mask ) ) {
       affinity_table[a_ctr] = i+1;  // There are no zeros in the affinity_table
-      printf("affinity_table[%i] = %i.\n", a_ctr, affinity_table[a_ctr]);
       a_ctr++;
     }
     i++;
