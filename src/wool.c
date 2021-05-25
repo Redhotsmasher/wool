@@ -2356,7 +2356,6 @@ static void init_workers( int w_idx, int n )
     _WOOL_(setspecific)( &tls_self, workers[i] );
    #endif
   }
-  
 }
 
 #if WOOL_FIXED_STEAL
